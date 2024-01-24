@@ -1,6 +1,6 @@
-# Resume Buddy 🚀
+# Resume Shortlisting 🚀
 
-Welcome to Resume shortlisting – Elevating Your Hiring Experience! ✨
+Welcome to Resume Shortlisting – Elevating Your Hiring Experience! ✨
 
 ## Overview
 
@@ -25,7 +25,7 @@ Resume shortlisting is your cutting-edge companion in the realm of recruitment, 
 Behold the elegance of the Model-View-Controller (MVC) architecture:
 - **Model (`model.py`):** The heart of the magic, managing data and orchestrating business logic.
 - **View (`view.py`):** A minimalist observer, ready to display enchanting results.
-- **Controller (`controller.py`):** The maestro harmonizing the interaction between model and view.
+- **Controller (`controller.py`):** The maestro harmonizes the interaction between model and view.
 
 ## FastAPI Integration
 
