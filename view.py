@@ -13,8 +13,25 @@ class output:
     
     def display_final_list(self, data):
         print('\nFinal Shortlist:')
-        
-        sorted_data = {filename: {"filename": filename, "score": entry["score"]} for filename, entry in sorted(data.items(), key=lambda x: x[1]["score"], reverse=True)}
+
+        sorted_data = {}
+        ranking = 1
+
+        for filename, entry in sorted(data.items(), key=lambda x: x[1]["score"], reverse=True):
+
+            file_path = entry['filepath'] # Access filepath
+            
+            sorted_data[f"rank {ranking}"] = {
+                    "filename": filename,
+                    "Url": file_path, # Add to output
+                    "score": entry["score"]
+            }
+
+            ranking += 1
+
+        # Print output with filepath  
+        for rank, entry in sorted_data.items():
+            print(f"{rank} - {entry['filename']} - {entry['Url']} - {entry['score']}") 
         print(sorted_data)
         return sorted_data
 

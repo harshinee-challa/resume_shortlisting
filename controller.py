@@ -13,6 +13,9 @@ import io
 import spacy
 nlp = spacy.load("en_core_web_sm")
 
+
+
+
 class ResumeController:
     def __init__(self, view,database):
         self.database = database
@@ -35,16 +38,12 @@ class ResumeController:
 
     def shortlist(self, keywords):
         resume_texts = self.database.get_pdf_text()
-
         vectorizer = TfidfVectorizer()
         tfidf_matrix = vectorizer.fit_transform(resume_texts)
 
         cosine_similarities = linear_kernel(tfidf_matrix, vectorizer.transform([" ".join(keywords)])).flatten()
-
-        # match_list = [file for index, file in enumerate(os.listdir(self.database.get_filenames_from_azure()))
-        #               if cosine_similarities[index] * 100 > 1.00]
         match_list = [filename for filename, similarity in zip(self.database.get_filenames_from_azure(), cosine_similarities)
-                      if similarity * 100 >= 0]
+                      if similarity * 100 >0]
         match_list = sorted(match_list)
 
         self.view.display_shortlist(match_list)
@@ -62,6 +61,7 @@ class ResumeController:
 
         for filename in match_list:
                 file_path = f"{self.database.container_name}/{filename}"
+                url=self.database.get_url(filename)
                 with pdfplumber.open(self.database.download_blob(file_path)) as pdf:
                     full_text = ''
                     for page in pdf.pages:
@@ -89,10 +89,9 @@ class ResumeController:
 
                     resume_scores[filename] = {
                         'filename': filename,
+                        'filepath':url,
                         'score': score*100
                     }
-
         self.view.secondlist(resume_scores)
         return resume_scores
-
-
+    

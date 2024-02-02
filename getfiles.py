@@ -1,7 +1,11 @@
 import PyPDF2
 import io
-from azure.storage.blob import BlobServiceClient, BlobClient
-
+from azure.storage.blob import BlobServiceClient, BlobClient, generate_blob_sas,BlobSasPermissions
+from azure.storage.blob._shared.shared_access_signature import QueryStringConstants
+from datetime import datetime, timedelta
+from urllib.parse import quote
+import urllib.parse
+import webbrowser
 
 class Database:
     def __init__(self, account_name, account_key, container_name, connect_str, container_client):
@@ -37,21 +41,38 @@ class Database:
             msg=f"Error deleting {file_name} file."
         return msg
         
+        
     
     def get_filenames_from_azure(self):
-        blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
-
-        container_client = blob_service_client.get_container_client(self.container_name)
-
-        return [blob.name for blob in container_client.list_blobs()]
-    
+        return [blob.name for blob in self.container_client.list_blobs()]
     
 
+
+    def get_url(self, blob_name):
+        connection_string = f"DefaultEndpointsProtocol=https;AccountName={self.account_name};AccountKey={self.account_key};EndpointSuffix=core.windows.net"
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        blob_client = blob_service_client.get_blob_client(container=self.container_name, blob=blob_name)
+
+        sas_token = generate_blob_sas(
+            account_name=self.account_name,
+            account_key=self.account_key,
+            container_name=self.container_name,
+            blob_name=blob_name,
+            permission=BlobSasPermissions(read=True,write=False),
+            expiry=datetime.utcnow() + timedelta(hours=1)  # Adjust the expiration time as needed
+        )
+
+        blob_url = f"{blob_client.url}?{sas_token}"
+        quote_name= urllib.parse.quote(blob_name)
+        disposition=f"inline; filename*=utf-8''{quote_name};"
+        blob_url+=f"&content-disposition={disposition}"
+        return blob_url
+    
+    
     def get_pdf_text(self):
         pdf_text = []
 
-        for blob in self.container_client.list_blobs():
-            if blob.name.endswith(".pdf"):
+        for blob in self.container_client.list_blobs() :
                 blob_client = BlobClient(
                     account_url=f"https://{self.account_name}.blob.core.windows.net",
                     container_name=self.container_name,
@@ -68,23 +89,21 @@ class Database:
                     text += page.extract_text()
 
                 pdf_text.append(text)
-
         return pdf_text
     
+    
+    
     def download_blob(self, file_path):
-        blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
 
         # Extract container name and blob name from the file path
         container_name, blob_name = file_path.split('/', 1)
 
-        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
 
         # Download the blob content
         blob_content = blob_client.download_blob().readall()
-
         return blob_content
 
     
-
 
 
